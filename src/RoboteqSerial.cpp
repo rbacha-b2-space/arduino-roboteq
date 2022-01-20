@@ -1170,7 +1170,12 @@ String RoboteqSerial::readQuery(const char *message, bool *serialTimedOut)
     {
         if(_stream.available())
         {
-            inputString = _stream.readStringUntil('\r');
+            // This is to limit the number of reads to avoid a "babbling idiot" to lock the processor
+            size_t nBytesAvailable = _stream.available();
+            for(size_t i=0; i<nBytesAvailable; i++){
+                inputString += _stream.read();
+            }
+            inputString.substring(0, inputString.indexOf('\r'));
 
             if (inputString.startsWith(message))
             {
@@ -1272,7 +1277,9 @@ void RoboteqSerial::startDataStream(const char *prefix, const char *delimiter, c
     _stream.write(streamCmd.c_str()); // Start the stream
     _stream.flush();
     
-    while(_stream.available()){ // Clear Rx buffer
+    // Clear Rx buffer, limiting the number of reads to avoid a "babbling idiot" or a floating serial connection to block the processor
+    size_t nBytesAvailable = _stream.available();
+    for(size_t i=0; i<nBytesAvailable; i++){
         _stream.read();
     }
 }
@@ -1288,7 +1295,10 @@ void RoboteqSerial::startDataStream(const char *prefix, const char *delimiter, c
  */
 int32_t RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen){
     String dataStream;
-    while(_stream.available()){
+
+    // Reads the stream limiting the number of reads to avoid a "babbling idiot" or a floating serial connection to block the processor
+    size_t nBytesAvailable = _stream.available();
+    for(size_t i=0; i<nBytesAvailable; i++){
         dataStream += (char)_stream.read();
     }
     return parseDataStream(dataStream, prefix, delimiter, buf, bufLen);
