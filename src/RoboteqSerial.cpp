@@ -1170,12 +1170,16 @@ String RoboteqSerial::readQuery(const char *message, bool *serialTimedOut)
     {
         if(_stream.available())
         {
+            inputString.clear();
             // This is to limit the number of reads to avoid a "babbling idiot" to lock the processor
             size_t nBytesAvailable = _stream.available();
             for(size_t i=0; i<nBytesAvailable; i++){
-                inputString += _stream.read();
+                char c = _stream.read();
+                if(c == '\r'){
+                    break;
+                }
+                inputString += c;
             }
-            inputString.substring(0, inputString.indexOf('\r'));
 
             if (inputString.startsWith(message))
             {
@@ -1350,3 +1354,4 @@ int32_t RoboteqSerial::parseDataStream(String &dataStream, const char *prefix, c
 
     return numOfElementsFound;
 }
+
