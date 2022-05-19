@@ -1170,7 +1170,7 @@ String RoboteqSerial::readQuery(const char *message, bool *serialTimedOut)
     {
         if(_stream.available())
         {
-            inputString.clear();
+            inputString = "";
             // This is to limit the number of reads to avoid a "babbling idiot" to lock the processor
             size_t nBytesAvailable = _stream.available();
             for(size_t i=0; i<nBytesAvailable; i++){
