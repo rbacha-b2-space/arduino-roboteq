@@ -1331,10 +1331,12 @@ int32_t RoboteqSerial::parseDataStream(String &dataStream, const char *prefix, c
     int32_t idxEndStream  = 0;
 
     while((idxEndStream-idxStrtStream) < ((2*bufLen)-1)){
-        idxStrtStream = dataStream.indexOf(tmp) + tmp.length()-1;
+        idxStrtStream = dataStream.indexOf(tmp);
         if(idxStrtStream == -1){
             return -1;
         }
+        idxStrtStream += tmp.length()-1;
+        
         idxEndStream = dataStream.indexOf('\r', idxStrtStream);
         if(idxEndStream == -1){
             return -1;
@@ -1368,5 +1370,6 @@ int32_t RoboteqSerial::parseDataStream(String &dataStream, const char *prefix, c
 
     return numOfElementsFound;
 }
+
 
 
