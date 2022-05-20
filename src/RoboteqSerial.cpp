@@ -1170,20 +1170,24 @@ String RoboteqSerial::readQuery(const char *message, bool *serialTimedOut)
     {
         if(_stream.available())
         {
-            inputString = "";
+            char c = ' ';
             // This is to limit the number of reads to avoid a "babbling idiot" to lock the processor
             size_t nBytesAvailable = _stream.available();
             for(size_t i=0; i<nBytesAvailable; i++){
-                char c = _stream.read();
+                c = _stream.read();
                 if(c == '\r'){
                     break;
                 }
                 inputString += c;
             }
 
-            if (inputString.startsWith(message))
+            if (inputString.startsWith(message) && (c == '\r'))
             {
                 return inputString.substring(inputString.indexOf("=") + 1);
+            }
+
+            if(c == '\r'){
+                inputString = "";
             }
         }
     }
@@ -1323,16 +1327,26 @@ int32_t RoboteqSerial::parseDataStream(String &dataStream, const char *prefix, c
     tmp = prefix;
     tmp += "=";
 
-    int32_t idxStrtStream = dataStream.indexOf(tmp) + tmp.length()-1;
-    if(idxStrtStream == -1){
-        return -1;
+    int32_t idxStrtStream = 0;
+    int32_t idxEndStream  = 0;
+
+    while((idxEndStream-idxStrtStream) < ((2*bufLen)-1)){
+        idxStrtStream = dataStream.indexOf(tmp) + tmp.length()-1;
+        if(idxStrtStream == -1){
+            return -1;
+        }
+        idxEndStream = dataStream.indexOf('\r', idxStrtStream);
+        if(idxEndStream == -1){
+            return -1;
+        }
+        dataStream = dataStream.substring(idxStrtStream);
     }
-    int32_t idxEndStream = dataStream.indexOf('\r', idxStrtStream);
-    if(idxEndStream == -1){
+
+    if(idxEndStream < 2){
         return -1;
     }
 
-    String inputString = dataStream.substring(idxStrtStream+1, idxEndStream);
+    String inputString = dataStream.substring(1, idxEndStream);
     size_t numOfElementsFound = 0;
     for(int32_t i=0; i<bufLen; i++){
         String dataElement;
@@ -1354,4 +1368,5 @@ int32_t RoboteqSerial::parseDataStream(String &dataStream, const char *prefix, c
 
     return numOfElementsFound;
 }
+
 
