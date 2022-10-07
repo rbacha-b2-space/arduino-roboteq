@@ -1338,33 +1338,29 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
 
     for(size_t i=0; i<_commBufPos; i++){
         c = _commBuf[i];
-        
-        switch (c){
-            case prefix[0]:
-                continue;
-                break;
 
-            case '=':
-                indexData = 0;
-                continue;
-                break;
-            
-            case (delimiter[0]):
+        if(c == prefix[0]){
+            continue;
+        }
+        else if(c == '='){
+            indexData = 0;
+            continue;
+        }
+        else if(c == delimiter[0]){
+            if(indexData < bufLen){
                 dataBuf[indexData] = dataStr.toInt();
                 dataAvailable[indexData] = true;
-                indexData++;
-                continue;
-                break;
-
-            case (dataEndDlimiter[0]):
+            }
+            indexData++;
+            continue;
+        }
+        else if(c == dataEndDlimiter[0]){
+            if(indexData < bufLen){
                 dataBuf[indexData] = dataStr.toInt();
                 dataAvailable[indexData] = true;
-                indexData = 0;
-                continue;
-                break;
-            
-            default:
-                break;
+            }
+            indexData = 0;
+            continue;
         }
 
         dataStr += c;
