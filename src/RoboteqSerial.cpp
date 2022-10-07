@@ -1297,11 +1297,12 @@ void RoboteqSerial::startDataStream(const char *prefix, const char *delimiter, c
  * 
  * @param prefix The data stream prefix.
  * @param delimiter The data stream delimiter.
- * @param buf The int64 data buffer to write the data to.
+ * @param dataEndDlimiter The delimiter for data end.
+ * @param dataBuf The int64 data buffer to write the data to.
+ * @param dataAvailable Array to indicate data is available at the specified indexes.
  * @param bufLen The length of the data buffer.
- * @return int32_t Number of elements found; -1 if error.
  */
-void RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen){
+void RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter, const char *dataEndDlimiter, int64_t *buf, bool *bufDataAvailable, size_t bufLen){
 
     // Reads the stream limiting the number of reads to avoid a "babbling idiot" or a floating serial connection to block the processor
     size_t nBytesAvailable = _stream.available();
@@ -1311,7 +1312,7 @@ void RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter,
         }
         _commBuf[_commBufPos++] = (char)_stream.read();
     }
-    return parseDataStream(prefix, delimiter, buf, bufLen);
+    return parseDataStream(prefix, delimiter, dataEndDlimiter, buf, bufDataAvailable, bufLen);
 }
 
 /**

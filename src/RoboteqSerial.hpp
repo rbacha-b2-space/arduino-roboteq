@@ -106,8 +106,8 @@ public:
 
 public:
     void startDataStream(const char *prefix, const char *delimiter, const char *query, int32_t dataStreamPeriod_ms);
-    void getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen);
-    void parseDataStream(String &dataStream, const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen);
+    void getDataFromStream(const char *prefix, const char *delimiter, const char *dataEndDlimiter, int64_t *buf, bool *bufDataAvailable, size_t bufLen);
+    void parseDataStream(const char *prefix, const char *delimiter, const char *dataEndDlimiter, int64_t *dataBuf, bool *dataAvailable, size_t bufLen);
 
 private:
     void sendMotorCommand(const char *commandMessage);
