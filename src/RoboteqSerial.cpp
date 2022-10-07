@@ -1301,74 +1301,73 @@ void RoboteqSerial::startDataStream(const char *prefix, const char *delimiter, c
  * @param bufLen The length of the data buffer.
  * @return int32_t Number of elements found; -1 if error.
  */
-int32_t RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen){
-    String dataStream;
+void RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen){
 
     // Reads the stream limiting the number of reads to avoid a "babbling idiot" or a floating serial connection to block the processor
     size_t nBytesAvailable = _stream.available();
     for(size_t i=0; i<nBytesAvailable; i++){
-        dataStream += (char)_stream.read();
+        if(_commBufPos >= ROBOTEQ_SERIAL_COMM_BUF_SIZE){
+            break;
+        }
+        _commBuf[_commBufPos++] = (char)_stream.read();
     }
-    return parseDataStream(dataStream, prefix, delimiter, buf, bufLen);
+    return parseDataStream(prefix, delimiter, buf, bufLen);
 }
 
 /**
  * @brief Split data stream string into its elements and return each element as int64 data.
  * 
- * @param dataStream The data stream string.
  * @param prefix The data stream prefix.
  * @param delimiter The data stream delimiter.
- * @param buf The int64 data buffer to write the data to.
+ * @param dataEndDlimiter The delimiter for data end.
+ * @param dataBuf The int64 data buffer to write the data to.
+ * @param dataAvailable Array to indicate data is available at the specified indexes.
  * @param bufLen The length of the data buffer.
- * @return int32_t Number of elements found; -1 if error.
  */
-int32_t RoboteqSerial::parseDataStream(String &dataStream, const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen){
-    String tmp;
-    tmp = prefix;
-    tmp += "=";
+void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, const char *dataEndDlimiter, int64_t *dataBuf, bool *dataAvailable, size_t bufLen){
 
-    int32_t idxStrtStream = 0;
-    int32_t idxEndStream  = 0;
+    for(size_t i=0; i<bufLen; i++){
+        dataBuf[i]       = 0;
+        dataAvailable[i] = false;
+    }
 
-    while((idxEndStream-idxStrtStream) < ((2*bufLen)-1)){
-        idxStrtStream = dataStream.indexOf(tmp);
-        if(idxStrtStream == -1){
-            return -1;
-        }
-        idxStrtStream += tmp.length()-1;
+    String dataStr = "";
+    char c = 0;
+    int32_t indexData = 0;
+
+    for(size_t i=0; i<_commBufPos; i++){
+        c = _commBuf[i];
         
-        idxEndStream = dataStream.indexOf('\r', idxStrtStream);
-        if(idxEndStream == -1){
-            return -1;
+        switch (c){
+            case prefix[0]:
+                continue;
+                break;
+
+            case '=':
+                indexData = 0;
+                continue;
+                break;
+            
+            case (delimiter[0]):
+                dataBuf[indexData] = dataStr.toInt();
+                dataAvailable[indexData] = true;
+                indexData++;
+                continue;
+                break;
+
+            case (dataEndDlimiter[0]):
+                dataBuf[indexData] = dataStr.toInt();
+                dataAvailable[indexData] = true;
+                indexData = 0;
+                continue;
+                break;
+            
+            default:
+                break;
         }
-        dataStream = dataStream.substring(idxStrtStream);
+
+        dataStr += c;
     }
-
-    if(idxEndStream < 2){
-        return -1;
-    }
-
-    String inputString = dataStream.substring(1, idxEndStream);
-    size_t numOfElementsFound = 0;
-    for(int32_t i=0; i<bufLen; i++){
-        String dataElement;
-        int32_t idxDelimiter = inputString.indexOf(delimiter);
-        if(idxDelimiter == -1){ // This is the last element
-            dataElement = inputString.substring(0, inputString.length());
-            buf[i] = dataElement.toInt();
-            numOfElementsFound++;
-            break;
-        }
-        else{
-            dataElement = inputString.substring(0, idxDelimiter);
-            inputString = inputString.substring(idxDelimiter+1);
-
-            buf[i] = dataElement.toInt();
-            numOfElementsFound++;
-        }
-    }
-
-    return numOfElementsFound;
 }
 
 

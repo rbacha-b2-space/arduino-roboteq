@@ -4,6 +4,10 @@
 #include <Stream.h>
 #include "RoboteqAPICommands.hpp"
 
+#ifndef ROBOTEQ_SERIAL_COMM_BUF_SIZE
+#define ROBOTEQ_SERIAL_COMM_BUF_SIZE 256
+#endif
+
 using namespace RoboteqApi;
 
 class RoboteqSerial
@@ -102,8 +106,8 @@ public:
 
 public:
     void startDataStream(const char *prefix, const char *delimiter, const char *query, int32_t dataStreamPeriod_ms);
-    int32_t getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen);
-    int32_t parseDataStream(String &dataStream, const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen);
+    void getDataFromStream(const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen);
+    void parseDataStream(String &dataStream, const char *prefix, const char *delimiter, int64_t *buf, size_t bufLen);
 
 private:
     void sendMotorCommand(const char *commandMessage);
@@ -124,6 +128,8 @@ private:
 
 
 private:
+    char _commBuf[ROBOTEQ_SERIAL_COMM_BUF_SIZE] = {0};
+    uint32_t _commBufPos = 0;
     Stream &_stream;
     uint8_t _timeout = 200;
 };
