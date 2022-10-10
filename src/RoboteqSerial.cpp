@@ -1335,6 +1335,7 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
     String dataStr = "";
     char c = 0;
     int32_t indexData = 0;
+    bool newDataSet = false;
 
     for(size_t i=0; i<_commBufPos; i++){
         c = _commBuf[i];
@@ -1342,30 +1343,38 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
         if(c == prefix[0]){
             continue;
         }
-        else if(c == '='){
+        if(c == '='){
             indexData = 0;
+            newDataSet = true;
+            dataStr = "";
             continue;
         }
-        else if(c == delimiter[0]){
+        if(c == delimiter[0] && newDataSet){
             if(indexData < bufLen){
                 dataBuf[indexData] = dataStr.toInt();
                 dataAvailable[indexData] = true;
             }
             indexData++;
+            dataStr = "";
             continue;
         }
-        else if(c == dataEndDlimiter[0]){
+        if(c == dataEndDlimiter[0] && newDataSet){
             if(indexData < bufLen){
                 dataBuf[indexData] = dataStr.toInt();
                 dataAvailable[indexData] = true;
             }
+            newDataSet = false;
             indexData = 0;
+            dataStr = "";
             continue;
         }
 
         dataStr += c;
     }
+
+    _commBufPos = 0;
 }
+
 
 
 
