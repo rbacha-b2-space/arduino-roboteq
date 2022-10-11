@@ -1306,11 +1306,11 @@ void RoboteqSerial::getDataFromStream(const char *prefix, const char *delimiter,
 
     // Reads the stream limiting the number of reads to avoid a "babbling idiot" or a floating serial connection to block the processor
     size_t nBytesAvailable = _stream.available();
+
     for(size_t i=0; i<nBytesAvailable; i++){
-        if(_commBufPos >= ROBOTEQ_SERIAL_COMM_BUF_SIZE){
-            break;
-        }
-        _commBuf[_commBufPos++] = (char)_stream.read();
+        _commBuf[_commBufEnd++] = (char)_stream.read();
+        _commBufEnd = _commBufEnd % ROBOTEQ_SERIAL_COMM_BUF_SIZE;
+        _bytesWritten++;
     }
     return parseDataStream(prefix, delimiter, dataEndDlimiter, buf, bufDataAvailable, bufLen);
 }
@@ -1334,47 +1334,40 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
 
     String dataStr = "";
     char c = 0;
-    int32_t indexData = 0;
-    bool newDataSet = false;
 
-    for(size_t i=0; i<_commBufPos; i++){
-        c = _commBuf[i];
+    for( ; _bytesWritten > 0; ){
+        c = _commBuf[_commBufStart++];
+        _commBufStart = _commBufStart % ROBOTEQ_SERIAL_COMM_BUF_SIZE;
+        _bytesWritten--;
 
         if(c == prefix[0]){
             continue;
         }
         if(c == '='){
-            indexData = 0;
-            newDataSet = true;
+            _indexData = 0;
             dataStr = "";
             continue;
         }
-        if(c == delimiter[0] && newDataSet){
-            if(indexData < bufLen){
+        if(c == delimiter[0]){
+            if(_indexData < bufLen){
                 dataBuf[indexData] = dataStr.toInt();
                 dataAvailable[indexData] = true;
             }
-            indexData++;
+            _indexData++;
             dataStr = "";
             continue;
         }
-        if(c == dataEndDlimiter[0] && newDataSet){
-            if(indexData < bufLen){
-                dataBuf[indexData] = dataStr.toInt();
-                dataAvailable[indexData] = true;
+        if(c == dataEndDlimiter[0]){
+            if(_indexData < bufLen){
+                dataBuf[_indexData] = dataStr.toInt();
+                dataAvailable[_indexData] = true;
             }
-            newDataSet = false;
-            indexData = 0;
+            _indexData = 0;
             dataStr = "";
             continue;
         }
 
         dataStr += c;
     }
-
-    _commBufPos = 0;
 }
-
-
-
 

@@ -129,7 +129,11 @@ private:
 
 private:
     char _commBuf[ROBOTEQ_SERIAL_COMM_BUF_SIZE] = {0};
-    uint32_t _commBufPos = 0;
+    size_t _commBufStart = 0;
+    size_t _commBufEnd   = 0;
+    size_t _bytesWritten = 0;
+    size_t _indexData    = 0;
     Stream &_stream;
     uint8_t _timeout = 200;
 };
+
