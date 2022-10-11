@@ -1350,8 +1350,8 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
         }
         if(c == delimiter[0]){
             if(_indexData < bufLen){
-                dataBuf[indexData] = dataStr.toInt();
-                dataAvailable[indexData] = true;
+                dataBuf[_indexData] = dataStr.toInt();
+                dataAvailable[_indexData] = true;
             }
             _indexData++;
             dataStr = "";
