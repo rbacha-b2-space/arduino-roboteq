@@ -1352,8 +1352,8 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
             if(_indexData < bufLen){
                 dataBuf[_indexData] = dataStr.toInt();
                 dataAvailable[_indexData] = true;
+                _indexData++;
             }
-            _indexData++;
             dataStr = "";
             continue;
         }
@@ -1361,8 +1361,8 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
             if(_indexData < bufLen){
                 dataBuf[_indexData] = dataStr.toInt();
                 dataAvailable[_indexData] = true;
+                _indexData = 0;
             }
-            _indexData = 0;
             dataStr = "";
             continue;
         }
@@ -1370,5 +1370,6 @@ void RoboteqSerial::parseDataStream(const char *prefix, const char *delimiter, c
         dataStr += c;
     }
 }
+
 
 
