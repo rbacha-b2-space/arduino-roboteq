@@ -133,7 +133,9 @@ private:
     size_t _commBufEnd   = 0;
     size_t _bytesWritten = 0;
     size_t _indexData    = 0;
+    bool   _newDatasetAvailable = false;
     Stream &_stream;
     uint8_t _timeout = 200;
 };
+
 
